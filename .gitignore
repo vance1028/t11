@@ -1,43 +1,24 @@
-# Dependencies
-node_modules/
-vendor/
-.venv/
-venv/
+# Backend
 __pycache__/
-*.pyc
+*.py[cod]
+*.so
+.env
+venv/
+.venv/
 
-# Build output
+# Frontend
+node_modules/
 dist/
 build/
-out/
-.next/
-target/
+.DS_Store
 
-# Environment & secrets
-.env
-.env.*
-!.env.example
+# Database
+*.db
+*.sqlite
 
 # IDE
-.idea/
 .vscode/
-*.swp
-*.swo
+.idea/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Coverage & test
-coverage/
-.nyc_output/
-htmlcov/
-
-# Temp
-tmp/
-.tmp/
-*.tmp
+# Docker volumes
+postgres_data/
