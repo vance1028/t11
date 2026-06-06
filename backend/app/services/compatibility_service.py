@@ -71,17 +71,17 @@ class CompatibilityService:
             return False, False
         
         rh_ok = False
-        if donor_rh_type == RhType.NEGATIVE:
+        if donor_rh_type == recipient_rh_type:
             rh_ok = True
-        elif donor_rh_type == recipient_rh_type:
-            rh_ok = True
-        
-        if not rh_ok:
-            if is_emergency and recipient_rh_type == RhType.POSITIVE:
+        elif donor_rh_type == RhType.NEGATIVE and recipient_rh_type == RhType.POSITIVE:
+            if is_emergency:
                 rh_ok = True
                 is_emergency_use = True
             else:
                 return False, False
+        
+        if not rh_ok:
+            return False, False
         
         if is_emergency_use and not is_emergency:
             return False, False
@@ -136,13 +136,14 @@ class CompatibilityService:
             return False, False
         
         rh_ok = False
-        if donor_rh_type == RhType.NEGATIVE:
+        if donor_rh_type == recipient_rh_type:
             rh_ok = True
-        elif donor_rh_type == recipient_rh_type:
-            rh_ok = True
-        elif is_emergency and recipient_rh_type == RhType.POSITIVE:
-            rh_ok = True
-            is_emergency_use = True
+        elif donor_rh_type == RhType.NEGATIVE and recipient_rh_type == RhType.POSITIVE:
+            if is_emergency:
+                rh_ok = True
+                is_emergency_use = True
+            else:
+                return False, False
         
         if not rh_ok:
             return False, False

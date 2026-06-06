@@ -114,6 +114,9 @@ function App() {
           justifyContent: 'space-between',
           background: '#001529',
           padding: '0 24px',
+          height: '64px',
+          lineHeight: '64px',
+          overflow: 'hidden',
         }}
       >
         <div
@@ -126,20 +129,20 @@ function App() {
           🏥 区域血液调度协同系统
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '64px', paddingRight: '8px' }}>
           {user && (
             <Dropdown menu={userMenu} placement="bottomRight">
-            <Space style={{ cursor: 'pointer', color: 'white' }}>
-              <Avatar icon={<UserOutlined />} />
-              <div>
-                <div style={{ fontSize: 14 }}>{user.real_name}</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  {roleLabels[user.role] || user.role}
+              <div style={{ cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', gap: '12px', height: '64px' }}>
+                <Avatar icon={<UserOutlined />} size="small" />
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>{user.real_name}</div>
+                  <div style={{ fontSize: 12, opacity: 0.8, whiteSpace: 'nowrap' }}>
+                    {roleLabels[user.role] || user.role}
+                  </div>
                 </div>
               </div>
-            </Space>
-          </Dropdown>
-        )}
+            </Dropdown>
+          )}
         </div>
       </Header>
       <Layout>

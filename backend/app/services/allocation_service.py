@@ -78,6 +78,8 @@ class AllocationService:
         if exclude_bag_ids:
             query = query.filter(BloodBag.id.notin_(exclude_bag_ids))
 
+        query = query.order_by(BloodBag.expiry_date.asc(), BloodBag.collection_date.asc())
+
         bags = query.all()
 
         results = []
@@ -104,18 +106,24 @@ class AllocationService:
             bag, is_emergency_use = item
             days_to_expiry = AllocationService.calculate_days_to_expiry(bag.expiry_date)
             
-            type_match_score = CompatibilityService.get_priority_score(
-                bag.blood_type,
-                bag.rh_type,
-                request.patient_blood_type,
-                request.patient_rh_type
-            )
+            abo_match = bag.blood_type == request.patient_blood_type
+            rh_match = bag.rh_type == request.patient_rh_type
             
-            emergency_penalty = 1000 if is_emergency_use else 0
+            match_tier = 0
+            if abo_match and rh_match:
+                match_tier = 0
+            elif abo_match and not rh_match:
+                match_tier = 1
+            elif not abo_match and rh_match:
+                match_tier = 2
+            else:
+                match_tier = 3
+            
+            emergency_penalty = 1 if is_emergency_use else 0
             
             return (
                 emergency_penalty,
-                -type_match_score,
+                match_tier,
                 days_to_expiry,
                 bag.collection_date
             )

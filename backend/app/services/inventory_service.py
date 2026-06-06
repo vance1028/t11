@@ -23,28 +23,42 @@ class InventoryService:
     ) -> tuple[List[DispatchItem], Optional[Exception]]:
         """
         并发安全地分配血袋。
-        使用 SELECT FOR UPDATE 行锁确保同一袋血不会被两个并发请求同时分配。
+        使用 SELECT FOR UPDATE 行锁一次性锁定所有匹配的血袋，确保同一袋血不会被两个并发请求同时分配。
         """
         allocated_items = []
         try:
-            for item in matched_items:
-                stmt = (
-                    select(BloodBag)
-                    .where(
-                        and_(
-                            BloodBag.id == item.blood_bag_id,
-                            BloodBag.status == BagStatus.IN_STOCK
-                        )
+            bag_ids = [item.blood_bag_id for item in matched_items]
+            
+            if not bag_ids:
+                return None, Exception("没有需要分配的血袋")
+            
+            stmt = (
+                select(BloodBag)
+                .where(
+                    and_(
+                        BloodBag.id.in_(bag_ids),
+                        BloodBag.status == BagStatus.IN_STOCK
                     )
-                    .with_for_update(skip_locked=False)
                 )
-                
-                result = db.execute(stmt)
-                bag = result.scalar_one_or_none()
-                
+                .with_for_update(skip_locked=False)
+            )
+            
+            result = db.execute(stmt)
+            bags = result.scalars().all()
+            
+            if len(bags) != len(matched_items):
+                db.rollback()
+                locked_ids = {bag.id for bag in bags}
+                missing = [item.bag_number for item in matched_items if item.blood_bag_id not in locked_ids]
+                return None, Exception(f"血袋 {', '.join(missing)} 已被其他请求分配，请重新匹配")
+            
+            bag_map = {bag.id: bag for bag in bags}
+            
+            for item in matched_items:
+                bag = bag_map.get(item.blood_bag_id)
                 if not bag:
                     db.rollback()
-                    return None, Exception(f"血袋 {item.bag_number} 已被分配或状态异常")
+                    return None, Exception(f"血袋 {item.bag_number} 不存在")
                 
                 bag.status = BagStatus.DISPATCHED
                 bag.updated_at = datetime.utcnow()
