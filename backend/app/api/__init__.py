@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from app.api import hospitals, inventory, requests, dispatches, dashboard, compatibility
+from app.api import auth, hospitals, inventory, requests, dispatches, dashboard, compatibility
 
 api_router = APIRouter()
 
+api_router.include_router(auth.router, prefix="/auth", tags=["认证"])
 api_router.include_router(hospitals.router, prefix="/hospitals", tags=["医院管理"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["库存管理"])
 api_router.include_router(requests.router, prefix="/requests", tags=["用血申请"])

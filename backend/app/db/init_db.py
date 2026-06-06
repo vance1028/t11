@@ -3,9 +3,10 @@ from datetime import datetime, date, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.database import Base, engine, SessionLocal
+from app.core.auth import get_password_hash
 from app.models import (
     Hospital, BloodBag, BloodRequest, Dispatch, DispatchItem,
-    CompatibilityMatrix, ColdChainRecord,
+    CompatibilityMatrix, ColdChainRecord, User, UserRole,
     BloodType, RhType, BloodComponent, BagStatus,
     UrgencyLevel, RequestStatus, DispatchStatus
 )
@@ -95,6 +96,61 @@ def init_hospitals(db: Session):
     for h in hospitals:
         hospital = Hospital(id=uuid.uuid4(), **h)
         db.add(hospital)
+    
+    db.commit()
+
+
+def init_users(db: Session):
+    existing = db.query(User).first()
+    if existing:
+        return
+
+    hospitals = db.query(Hospital).all()
+    blood_center = next((h for h in hospitals if h.is_blood_center), None)
+    first_hospital = next((h for h in hospitals if not h.is_blood_center), None)
+
+    users = [
+        {
+            "username": "admin",
+            "password": "admin123",
+            "real_name": "系统管理员",
+            "role": UserRole.ADMIN,
+            "hospital_id": blood_center.id if blood_center else None,
+        },
+        {
+            "username": "doctor",
+            "password": "doctor123",
+            "real_name": "张医生",
+            "role": UserRole.DOCTOR,
+            "hospital_id": first_hospital.id if first_hospital else None,
+        },
+        {
+            "username": "nurse",
+            "password": "nurse123",
+            "real_name": "李护士",
+            "role": UserRole.NURSE,
+            "hospital_id": blood_center.id if blood_center else None,
+        },
+        {
+            "username": "dispatcher",
+            "password": "dispatcher123",
+            "real_name": "王调度",
+            "role": UserRole.DISPATCHER,
+            "hospital_id": blood_center.id if blood_center else None,
+        },
+    ]
+
+    for u in users:
+        user = User(
+            id=uuid.uuid4(),
+            username=u["username"],
+            hashed_password=get_password_hash(u["password"]),
+            real_name=u["real_name"],
+            role=u["role"],
+            hospital_id=u["hospital_id"],
+            is_active=True,
+        )
+        db.add(user)
     
     db.commit()
 
@@ -350,6 +406,7 @@ def init_database():
     try:
         init_compatibility_matrix(db)
         init_hospitals(db)
+        init_users(db)
         init_blood_bags(db)
         init_requests_and_dispatches(db)
     finally:

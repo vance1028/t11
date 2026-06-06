@@ -12,6 +12,7 @@ import {
   message,
   Typography,
   Descriptions,
+  ConfigProvider,
   Row,
   Col,
   Card,
@@ -33,7 +34,7 @@ import {
 } from '../types';
 import dayjs from 'dayjs';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const componentLabels: Record<BloodComponent, string> = {

@@ -54,6 +54,29 @@ class DispatchStatus(str, enum.Enum):
     DELIVERED = "DELIVERED"
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "ADMIN"
+    DOCTOR = "DOCTOR"
+    NURSE = "NURSE"
+    DISPATCHER = "DISPATCHER"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(200), nullable=False)
+    real_name = Column(String(100), nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.DOCTOR)
+    hospital_id = Column(UUID(as_uuid=True), ForeignKey("hospitals.id"), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    hospital = relationship("Hospital")
+
+
 class Hospital(Base):
     __tablename__ = "hospitals"
 
